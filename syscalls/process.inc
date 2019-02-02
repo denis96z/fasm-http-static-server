@@ -1,5 +1,4 @@
-SYS_FORK equ 0x39
-SYS_EXIT equ 0x3C
+include './syscall.inc'
 
 macro fork
 {

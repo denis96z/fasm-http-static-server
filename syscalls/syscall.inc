@@ -1,0 +1,5 @@
+SYS_WRITE  equ 0x01
+SYS_CLOSE  equ 0x03
+SYS_SOCKET equ 0x29
+SYS_FORK   equ 0x39
+SYS_EXIT   equ 0x3C

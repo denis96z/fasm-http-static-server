@@ -4,9 +4,23 @@ entry main
 segment readable executable
 
 include './syscalls/io.inc'
+include './syscalls/socket.inc'
 include './syscalls/process.inc'
 
 main:
+    socket
+    cmp rax, -1
+    jne socket_success
+
+socket_fail:
+    print socket_fail_log, socket_fail_log_size
+    exit_error
+
+socket_success:
+    mov [socket_fd], rax
+    mov rcx, 3
+
+fork_start:
     fork
     cmp rax, -1
     jne fork_success
@@ -21,7 +35,7 @@ fork_success:
     jmp master_process
 
 master_process:
-    print master_log, master_log_size
+    loop fork_start
     exit_ok
 
 worker_process:
@@ -29,6 +43,11 @@ worker_process:
     exit_ok
 
 segment readable writeable
+
+socket_fd dq ?
+
+socket_fail_log db 'socket failed', 0xA
+socket_fail_log_size = $-socket_fail_log
 
 fork_fail_log db 'fork failed', 0xA
 fork_fail_log_size = $-fork_fail_log
