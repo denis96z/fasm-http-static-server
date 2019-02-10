@@ -49,7 +49,7 @@ on_listen_success:
 call_accept:
     accept [_sock_fd]
     cmp    rax, -1
-    push   rax
+    mov    [_clnt_fd], rax
     jne    on_accept_success
 
 on_accept_fail:
@@ -57,8 +57,8 @@ on_accept_fail:
     jmp   call_accept
 
 on_accept_success:
-    pop   rcx
-    close rcx
+    write [_clnt_fd], _ok_resp, __ok_resp_size
+    close [_clnt_fd]
     jmp   call_accept
 
 call_exit:
@@ -69,34 +69,39 @@ segment readable writeable
 SERVER_PORT equ 80
 
 _sock_fd dq ?
+_clnt_fd dq ?
 
 _sock_addr sockaddr_in_t SERVER_PORT
 __sock_addr_size = $-_sock_addr
 
+_ok_resp db 'HTTP/1.1 200 OK',0x0D,0x0A
+         db 'Content-Length: 0',0x0D, 0x0A,0x0D, 0x0A
+__ok_resp_size = $-_ok_resp
+
 segment readable
 
-_socket_fail_log db 'socket() fail!', 0xA
+_socket_fail_log db 'socket() fail!',0x0A
 __socket_fail_log_size = $-_socket_fail_log
 
-_socket_success_log db 'socket() success!', 0xA
+_socket_success_log db 'socket() success!',0x0A
 __socket_success_log_size = $-_socket_success_log
 
-_bind_fail_log db 'bind() fail!', 0xA
+_bind_fail_log db 'bind() fail!',0x0A
 __bind_fail_log_size = $-_bind_fail_log
 
-_bind_success_log db 'bind() success!', 0xA
+_bind_success_log db 'bind() success!',0x0A
 __bind_success_log_size = $-_bind_success_log
 
-_listen_fail_log db 'listen() fail!', 0xA
+_listen_fail_log db 'listen() fail!',0x0A
 __listen_fail_log_size = $-_listen_fail_log
 
-_listen_success_log db 'listen() success!', 0xA
+_listen_success_log db 'listen() success!',0x0A
 __listen_success_log_size = $-_listen_success_log
 
-_accept_fail_log db 'accept() fail!', 0xA
+_accept_fail_log db 'accept() fail!',0x0A
 __accept_fail_log_size = $-_accept_fail_log
 
-_accept_success_log db 'accept() success!', 0xA
+_accept_success_log db 'accept() success!',0x0A
 __accept_success_log_size = $-_accept_success_log
 
 include './headers/server.inc'
