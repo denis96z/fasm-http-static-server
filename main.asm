@@ -8,55 +8,48 @@ include './syscalls/socket.inc'
 include './syscalls/process.inc'
 
 main:
+
+call_socket:
     socket
-    cmp rax, -1
-    jne socket_success
+    cmp    rax, 0
+    jg     on_socket_success
+    jmp    on_socket_fail
 
-socket_fail:
-    print socket_fail_log, socket_fail_log_size
+on_socket_fail:
+    print _socket_fail_log, __socket_fail_log_size
     exit_error
 
-socket_success:
-    mov [socket_fd], rax
-    mov rcx, 3
+on_socket_success:
+    mov [_sock_fd], rax
 
-fork_start:
-    fork
-    cmp rax, -1
-    jne fork_success
+call_bind:
+    bind [_sock_fd], _sock_addr, __sock_addr_size
+    cmp  rax, 0
+    je   on_bind_success
+    jmp  on_bind_fail
 
-fork_fail:
-    print fork_fail_log, fork_fail_log_size
+on_bind_fail:
+    print _bind_fail_log, __bind_fail_log_size
     exit_error
 
-fork_success:
-    cmp rax, 0
-    jne worker_process
-    jmp master_process
-
-master_process:
-    loop fork_start
-    exit_ok
-
-worker_process:
-    print worker_log, worker_log_size
+on_bind_success:
+call_exit:
     exit_ok
 
 segment readable writeable
 
-socket_fd dq ?
+SERVER_PORT equ 80
 
-socket_fail_log db 'socket failed', 0xA
-socket_fail_log_size = $-socket_fail_log
+_sock_fd dq ?
 
-fork_fail_log db 'fork failed', 0xA
-fork_fail_log_size = $-fork_fail_log
+_sock_addr sockaddr_in_t SERVER_PORT
+__sock_addr_size = $-_sock_addr
 
-master_log db 'master process', 0xA
-master_log_size = $-master_log
+_socket_fail_log db 'socket() failed', 0xA
+__socket_fail_log_size = $-_socket_fail_log
 
-worker_log db 'worker process', 0xA
-worker_log_size = $-worker_log
+_bind_fail_log db 'bind() failed', 0xA
+__bind_fail_log_size = $-_bind_fail_log
 
 include './headers/server.inc'
 include './headers/content_type.inc'
