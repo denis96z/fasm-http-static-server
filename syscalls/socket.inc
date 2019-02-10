@@ -28,3 +28,13 @@ macro bind _fd_, _addr_, _addr_size_
     mov rdx, _addr_size_
     syscall
 }
+
+SOMAXCONN equ 128
+
+macro listen _fd_, _backlog_
+{
+    mov rax, SYS_LISTEN
+    mov rdi, _fd_
+    mov rsi, SOMAXCONN
+    syscall
+}
