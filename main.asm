@@ -75,7 +75,8 @@ _sock_addr sockaddr_in_t SERVER_PORT
 __sock_addr_size = $-_sock_addr
 
 _ok_resp db 'HTTP/1.1 200 OK',0x0D,0x0A
-         db 'Content-Length: 0',0x0D, 0x0A,0x0D, 0x0A
+         db 'Content-Length: 12',0x0D, 0x0A,0x0D, 0x0A
+         db 'Hello world!',0x0D, 0x0A,0x0D, 0x0A
 __ok_resp_size = $-_ok_resp
 
 segment readable
