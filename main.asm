@@ -33,18 +33,33 @@ on_bind_fail:
 
 on_bind_success:
     print _bind_success_log, __bind_success_log_size
-    
+
 call_listen:
     listen [_sock_fd]
     test   rax, rax
     je     on_listen_success
-    
+
 on_listen_fail:
     print _listen_fail_log, __listen_fail_log_size
     exit_error
-    
+
 on_listen_success:
     print _listen_success_log, __listen_success_log_size
+
+call_accept:
+    accept [_sock_fd]
+    cmp    rax, -1
+    push   rax
+    jne    on_accept_success
+
+on_accept_fail:
+    print _accept_fail_log, __accept_fail_log_size
+    jmp   call_accept
+
+on_accept_success:
+    pop   rcx
+    close rcx
+    jmp   call_accept
 
 call_exit:
     exit_ok
@@ -77,6 +92,12 @@ __listen_fail_log_size = $-_listen_fail_log
 
 _listen_success_log db 'listen() success!', 0xA
 __listen_success_log_size = $-_listen_success_log
+
+_accept_fail_log db 'accept() fail!', 0xA
+__accept_fail_log_size = $-_accept_fail_log
+
+_accept_success_log db 'accept() success!', 0xA
+__accept_success_log_size = $-_accept_success_log
 
 include './headers/server.inc'
 include './headers/content_type.inc'

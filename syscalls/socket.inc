@@ -15,8 +15,8 @@ macro socket
 struc sockaddr_in_t _port_
 {
     .sin_family dw AF_INET
-    .sin_port   db _port_, 0
-    .sin_addr   db 0,0,0,0
+    .sin_port   db 0, _port_
+    .sin_addr   db 4 dup(0)
     .sin_zero   db 8 dup(0)
 }
 
@@ -36,5 +36,14 @@ macro listen _fd_, _backlog_
     mov rax, SYS_LISTEN
     mov rdi, _fd_
     mov rsi, SOMAXCONN
+    syscall
+}
+
+macro accept _fd_
+{
+    mov rax, SYS_ACCEPT
+    mov rdi, _fd_
+    xor rsi, rsi
+    xor rdx, rdx
     syscall
 }
