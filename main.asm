@@ -57,7 +57,7 @@ on_accept_fail:
     jmp   call_accept
 
 on_accept_success:
-    write [_clnt_fd], _ok_resp, __ok_resp_size
+    write [_clnt_fd], _http_html_headers, __http_html_headers_size
     close [_clnt_fd]
     jmp   call_accept
 
@@ -74,10 +74,7 @@ _clnt_fd dq ?
 _sock_addr sockaddr_in_t SERVER_PORT
 __sock_addr_size = $-_sock_addr
 
-_ok_resp db 'HTTP/1.1 200 OK',0x0D,0x0A
-         db 'Content-Length: 12',0x0D, 0x0A,0x0D, 0x0A
-         db 'Hello world!',0x0D, 0x0A,0x0D, 0x0A
-__ok_resp_size = $-_ok_resp
+include './http/response.asm'
 
 segment readable
 
@@ -104,6 +101,3 @@ __accept_fail_log_size = $-_accept_fail_log
 
 _accept_success_log db 'accept() success!',0x0A
 __accept_success_log_size = $-_accept_success_log
-
-include './headers/server.inc'
-include './headers/content_type.inc'
