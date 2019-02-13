@@ -11,6 +11,15 @@ macro print _ptr_, _size_
     syscall
 }
 
+macro read _fd_, _buffer_ptr_, _buffer_size_
+{
+    mov rax, SYS_READ
+    mov rdi, _fd_
+    mov rsi, _buffer_ptr_
+    mov rdx, _buffer_size_
+    syscall
+}
+
 macro write _fd_, _data_ptr_, _data_size_
 {
     mov rax, SYS_WRITE
