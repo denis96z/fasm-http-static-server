@@ -31,7 +31,6 @@ main:
 
 @@:
     mov   [_config_data_size], rax
-    exit  0;TODO
 
     socket
     cmp rax, 0
@@ -54,6 +53,9 @@ main:
     je     @f
 
     panic LISTEN_FAIL_LOG_STR, LISTEN_FAIL_LOG_LEN
+
+@@:
+    print SERVER_START_LOG_STR, SERVER_START_LOG_LEN
 
 accept_loop:
     accept [_sock_fd]
@@ -107,6 +109,9 @@ BIND_FAIL_LOG_LEN = $-BIND_FAIL_LOG_STR
 
 LISTEN_FAIL_LOG_STR db 'listen() fail!',0x0A
 LISTEN_FAIL_LOG_LEN = $-LISTEN_FAIL_LOG_STR
+
+SERVER_START_LOG_STR db 'listening on 0.0.0.0:80', 0x0A ;TODO print port
+SERVER_START_LOG_LEN = $-SERVER_START_LOG_STR
 
 ACCEPT_FAIL_LOG_STR db 'accept() fail!',0x0A
 ACCEPT_FAIL_LOG_LEN = $-ACCEPT_FAIL_LOG_STR
