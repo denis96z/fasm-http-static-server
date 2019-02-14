@@ -3,16 +3,22 @@ entry main
 
 segment readable executable
 
+include './config/config.inc'
+
 include './syscalls/io.inc'
 include './syscalls/socket.inc'
 include './syscalls/process.inc'
 
 main:
-    openr _config_filename
+    mov   ax, DEFAULT_SERVER_PORT
+    hton  ax
+    mov   [_srv_config.port], ax
+
+    openr CONFIG_FILENAME
     cmp   rax, -1
     jne   @f
 
-    print _open_config_fail_log, __open_config_fail_log_size
+    print OPEN_CONFIG_FAIL_LOG_STR, OPEN_CONFIG_FAIL_LOG_LEN
     exit_error
 
 @@:
@@ -22,7 +28,7 @@ main:
     cmp  rax, -1
     jne  @f
 
-    print _read_config_fail_log, READ_CONFIG_FAIL_LOG_LEN
+    print READ_CONFIG_FAIL_LOG_STR, READ_CONFIG_FAIL_LOG_LEN
     exit_error
 
 @@:
@@ -92,6 +98,8 @@ _config_fd        dq ?
 _config_buffer    db CONFIG_BUFFER_SIZE dup(?)
 _config_data_size dq ?
 
+_srv_config srv_config_t
+
 SERVER_PORT equ 80
 
 _sock_fd dq ?
@@ -104,17 +112,13 @@ include './http/response.asm'
 
 segment readable
 
-_config_filename db '/etc/httpd.conf',0x00
-__config_filename_size = $-_config_filename
+CONFIG_FILENAME db '/etc/httpd.conf',0x00
 
-_open_config_fail_log db 'config open() fail!',0x0A
-__open_config_fail_log_size = $-_open_config_fail_log
+OPEN_CONFIG_FAIL_LOG_STR db 'config open() fail!',0x0A
+OPEN_CONFIG_FAIL_LOG_LEN = $-OPEN_CONFIG_FAIL_LOG_STR
 
-_read_config_fail_log db 'config read() fail!',0x0A
-READ_CONFIG_FAIL_LOG_LEN = $-_read_config_fail_log
-
-_open_ok db 'open() ok', 0x0A
-_open_ok_size = $-_open_ok
+READ_CONFIG_FAIL_LOG_STR db 'config read() fail!',0x0A
+READ_CONFIG_FAIL_LOG_LEN = $-READ_CONFIG_FAIL_LOG_STR
 
 _socket_fail_log db 'socket() fail!',0x0A
 __socket_fail_log_size = $-_socket_fail_log
