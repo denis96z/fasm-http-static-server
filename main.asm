@@ -54,6 +54,30 @@ main:
 @@:
     print SERVER_START_LOG_STR, SERVER_START_LOG_LEN
 
+    mov r9, qword [_srv_config.num_workers]
+
+fork_loop:
+    fork
+    mov r10, rax
+    cmp r10, -1
+    jne @f
+
+    panic FORK_FAIL_LOG_STR, FORK_FAIL_LOG_LEN
+
+@@:
+    test r10, r10
+    jne  @f
+
+    dec  r9
+    test r9, r9
+    jne  fork_loop
+
+    exit 0
+
+@@:
+    mov _worker_start_log 
+    print WORKER_START_LOG_STR, WORKER_START_LOG_LEN
+
 accept_loop:
     accept [_sock_fd]
     cmp    rax, -1
@@ -85,6 +109,14 @@ _clnt_fd dq ?
 _sock_addr sockaddr_in_t SERVER_PORT
 SOCK_ADDR_SIZE = $-_sock_addr
 
+_worker_start_log db 'worker #'
+    WORKER_INDEX_STR_OFFSET = $-_worker_start_log
+                  db ' started', 0x0A
+WORKER_START_LOG_STR = $-WORKER_START_LOG_LEN
+
+_clnt_fds     dq DEFAULT_NUM_WORKERS dup(?)
+_num_clnt_fds dq ?
+
 include './http/response.asm'
 
 segment readable
@@ -111,6 +143,9 @@ LISTEN_FAIL_LOG_LEN = $-LISTEN_FAIL_LOG_STR
 
 SERVER_START_LOG_STR db 'listening on 0.0.0.0:80', 0x0A ;TODO print port
 SERVER_START_LOG_LEN = $-SERVER_START_LOG_STR
+
+FORK_FAIL_LOG_STR db 'fork() fail!',0x0A
+FORK_FAIL_LOG_LEN = $-FORK_FAIL_LOG_STR
 
 ACCEPT_FAIL_LOG_STR db 'accept() fail!',0x0A
 ACCEPT_FAIL_LOG_LEN = $-ACCEPT_FAIL_LOG_STR
