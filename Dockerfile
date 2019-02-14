@@ -5,7 +5,7 @@ RUN apt-get update \
 WORKDIR /tmp
 
 COPY . .
-COPY ./httpd.conf /etc/httpd.conf
+COPY ./config/httpd.conf /etc/httpd.conf
 
 RUN fasm main.asm service \
     && chmod +x service
