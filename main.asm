@@ -16,6 +16,17 @@ main:
     exit_error
 
 @@:
+    mov  [_config_fd], rax
+
+    read [_config_fd], _config_buffer, CONFIG_BUFFER_SIZE
+    cmp  rax, -1
+    jne  @f
+
+    print _read_config_fail_log, READ_CONFIG_FAIL_LOG_LEN
+    exit_error
+
+@@:
+    mov   [_config_data_size], rax
     exit_ok ;TODO
 
 call_socket:
@@ -75,6 +86,12 @@ call_exit:
 
 segment readable writeable
 
+CONFIG_BUFFER_SIZE = 512
+
+_config_fd        dq ?
+_config_buffer    db CONFIG_BUFFER_SIZE dup(?)
+_config_data_size dq ?
+
 SERVER_PORT equ 80
 
 _sock_fd dq ?
@@ -87,11 +104,14 @@ include './http/response.asm'
 
 segment readable
 
-_config_filename db '/etc/config',0x00
+_config_filename db '/etc/httpd.conf',0x00
 __config_filename_size = $-_config_filename
 
 _open_config_fail_log db 'config open() fail!',0x0A
 __open_config_fail_log_size = $-_open_config_fail_log
+
+_read_config_fail_log db 'config read() fail!',0x0A
+READ_CONFIG_FAIL_LOG_LEN = $-_read_config_fail_log
 
 _open_ok db 'open() ok', 0x0A
 _open_ok_size = $-_open_ok

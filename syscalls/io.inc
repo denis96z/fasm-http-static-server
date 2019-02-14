@@ -15,9 +15,8 @@ macro print _ptr_, _size_
 macro openr _filename_
 {
     mov rax, SYS_OPEN
-    xor rdi, rdi
-    mov rsi, _filename_
-    mov rdx, O_RDONLY
+    mov rdi, _filename_
+    mov rsi, O_RDONLY
     syscall
 }
 
