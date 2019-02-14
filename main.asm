@@ -18,8 +18,7 @@ main:
     cmp   rax, -1
     jne   @f
 
-    print OPEN_CONFIG_FAIL_LOG_STR, OPEN_CONFIG_FAIL_LOG_LEN
-    panic
+    panic OPEN_CONFIG_FAIL_LOG_STR, OPEN_CONFIG_FAIL_LOG_LEN
 
 @@:
     mov  [_config_fd], rax
@@ -28,19 +27,17 @@ main:
     cmp  rax, -1
     jne  @f
 
-    print READ_CONFIG_FAIL_LOG_STR, READ_CONFIG_FAIL_LOG_LEN
-    panic
+    panic READ_CONFIG_FAIL_LOG_STR, READ_CONFIG_FAIL_LOG_LEN
 
 @@:
     mov   [_config_data_size], rax
-    exit  ;TODO
+    exit  0;TODO
 
     socket
     cmp rax, 0
     jg  @f
 
-    print SOCKET_FAIL_LOG_STR, SOCKET_FAIL_LOG_LEN
-    panic
+    panic SOCKET_FAIL_LOG_STR, SOCKET_FAIL_LOG_LEN
 
 @@:
     mov   [_sock_fd], rax
@@ -49,16 +46,14 @@ main:
     test rax, rax
     je   @f
 
-    print BIND_FAIL_LOG_STR, BIND_FAIL_LOG_LEN
-    panic
+    panic BIND_FAIL_LOG_STR, BIND_FAIL_LOG_LEN
 
 @@:
     listen [_sock_fd]
     test   rax, rax
     je     @f
 
-    print LISTEN_FAIL_LOG_STR, LISTEN_FAIL_LOG_LEN
-    panic
+    panic LISTEN_FAIL_LOG_STR, LISTEN_FAIL_LOG_LEN
 
 accept_loop:
     accept [_sock_fd]
