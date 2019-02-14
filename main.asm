@@ -10,10 +10,6 @@ include './syscalls/socket.inc'
 include './syscalls/process.inc'
 
 main:
-    mov   ax, DEFAULT_SERVER_PORT
-    hton  ax
-    mov   [_srv_config.port], ax
-
     openr CONFIG_FILENAME
     cmp   rax, -1
     jne   @f
@@ -21,9 +17,9 @@ main:
     panic OPEN_CONFIG_FAIL_LOG_STR, OPEN_CONFIG_FAIL_LOG_LEN
 
 @@:
-    mov  [_config_fd], rax
+    mov  r10, rax
 
-    read [_config_fd], _config_buffer, CONFIG_BUFFER_SIZE
+    read r10, _config_buffer, CONFIG_BUFFER_SIZE
     cmp  rax, -1
     jne  @f
 
@@ -31,6 +27,7 @@ main:
 
 @@:
     mov   [_config_data_size], rax
+    close r10
 
     socket
     cmp rax, 0
@@ -75,7 +72,6 @@ segment readable writeable
 
 CONFIG_BUFFER_SIZE = 512
 
-_config_fd        dq ?
 _config_buffer    db CONFIG_BUFFER_SIZE dup(?)
 _config_data_size dq ?
 
@@ -100,6 +96,9 @@ OPEN_CONFIG_FAIL_LOG_LEN = $-OPEN_CONFIG_FAIL_LOG_STR
 
 READ_CONFIG_FAIL_LOG_STR db 'config read() fail!',0x0A
 READ_CONFIG_FAIL_LOG_LEN = $-READ_CONFIG_FAIL_LOG_STR
+
+CLOSE_CONFIG_FAIL_LOG_STR db 'config close() fail!',0x0A
+CLOSE_CONFIG_FAIL_LOG_LEN = $-CLOSE_CONFIG_FAIL_LOG_STR
 
 SOCKET_FAIL_LOG_STR db 'socket() fail!',0x0A
 SOCKET_FAIL_LOG_LEN = $-SOCKET_FAIL_LOG_STR
