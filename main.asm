@@ -19,7 +19,7 @@ main:
     jne   @f
 
     print OPEN_CONFIG_FAIL_LOG_STR, OPEN_CONFIG_FAIL_LOG_LEN
-    exit_error
+    panic
 
 @@:
     mov  [_config_fd], rax
@@ -29,66 +29,50 @@ main:
     jne  @f
 
     print READ_CONFIG_FAIL_LOG_STR, READ_CONFIG_FAIL_LOG_LEN
-    exit_error
+    panic
 
 @@:
     mov   [_config_data_size], rax
-    exit_ok ;TODO
+    exit  ;TODO
 
-call_socket:
     socket
     cmp rax, 0
-    jg  on_socket_success
+    jg  @f
 
-on_socket_fail:
-    print _socket_fail_log, __socket_fail_log_size
-    exit_error
+    print SOCKET_FAIL_LOG_STR, SOCKET_FAIL_LOG_LEN
+    panic
 
-on_socket_success:
+@@:
     mov   [_sock_fd], rax
-    print _socket_success_log, __socket_success_log_size
 
-call_bind:
-    bind [_sock_fd], _sock_addr, __sock_addr_size
+    bind [_sock_fd], _sock_addr, SOCK_ADDR_SIZE
     test rax, rax
-    je   on_bind_success
+    je   @f
 
-on_bind_fail:
-    print _bind_fail_log, __bind_fail_log_size
-    exit_error
+    print BIND_FAIL_LOG_STR, BIND_FAIL_LOG_LEN
+    panic
 
-on_bind_success:
-    print _bind_success_log, __bind_success_log_size
-
-call_listen:
+@@:
     listen [_sock_fd]
     test   rax, rax
-    je     on_listen_success
+    je     @f
 
-on_listen_fail:
-    print _listen_fail_log, __listen_fail_log_size
-    exit_error
+    print LISTEN_FAIL_LOG_STR, LISTEN_FAIL_LOG_LEN
+    panic
 
-on_listen_success:
-    print _listen_success_log, __listen_success_log_size
-
-call_accept:
+accept_loop:
     accept [_sock_fd]
     cmp    rax, -1
     mov    [_clnt_fd], rax
-    jne    on_accept_success
+    jne    @f
 
-on_accept_fail:
-    print _accept_fail_log, __accept_fail_log_size
-    jmp   call_accept
+    print ACCEPT_FAIL_LOG_STR, ACCEPT_FAIL_LOG_LEN
+    jmp   accept_loop
 
-on_accept_success:
+@@:
     write [_clnt_fd], _http_html_headers, __http_html_headers_size
     close [_clnt_fd]
-    jmp   call_accept
-
-call_exit:
-    exit_ok
+    jmp   accept_loop
 
 segment readable writeable
 
@@ -106,7 +90,7 @@ _sock_fd dq ?
 _clnt_fd dq ?
 
 _sock_addr sockaddr_in_t SERVER_PORT
-__sock_addr_size = $-_sock_addr
+SOCK_ADDR_SIZE = $-_sock_addr
 
 include './http/response.asm'
 
@@ -120,26 +104,14 @@ OPEN_CONFIG_FAIL_LOG_LEN = $-OPEN_CONFIG_FAIL_LOG_STR
 READ_CONFIG_FAIL_LOG_STR db 'config read() fail!',0x0A
 READ_CONFIG_FAIL_LOG_LEN = $-READ_CONFIG_FAIL_LOG_STR
 
-_socket_fail_log db 'socket() fail!',0x0A
-__socket_fail_log_size = $-_socket_fail_log
+SOCKET_FAIL_LOG_STR db 'socket() fail!',0x0A
+SOCKET_FAIL_LOG_LEN = $-SOCKET_FAIL_LOG_STR
 
-_socket_success_log db 'socket() success!',0x0A
-__socket_success_log_size = $-_socket_success_log
+BIND_FAIL_LOG_STR db 'bind() fail!',0x0A
+BIND_FAIL_LOG_LEN = $-BIND_FAIL_LOG_STR
 
-_bind_fail_log db 'bind() fail!',0x0A
-__bind_fail_log_size = $-_bind_fail_log
+LISTEN_FAIL_LOG_STR db 'listen() fail!',0x0A
+LISTEN_FAIL_LOG_LEN = $-LISTEN_FAIL_LOG_STR
 
-_bind_success_log db 'bind() success!',0x0A
-__bind_success_log_size = $-_bind_success_log
-
-_listen_fail_log db 'listen() fail!',0x0A
-__listen_fail_log_size = $-_listen_fail_log
-
-_listen_success_log db 'listen() success!',0x0A
-__listen_success_log_size = $-_listen_success_log
-
-_accept_fail_log db 'accept() fail!',0x0A
-__accept_fail_log_size = $-_accept_fail_log
-
-_accept_success_log db 'accept() success!',0x0A
-__accept_success_log_size = $-_accept_success_log
+ACCEPT_FAIL_LOG_STR db 'accept() fail!',0x0A
+ACCEPT_FAIL_LOG_LEN = $-ACCEPT_FAIL_LOG_STR

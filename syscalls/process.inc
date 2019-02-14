@@ -6,14 +6,14 @@ macro fork
     syscall
 }
 
-macro exit_ok
+macro exit
 {
     mov rax, SYS_EXIT
     xor rdi, rdi
     syscall
 }
 
-macro exit_error
+macro panic
 {
     mov rax, SYS_EXIT
     mov rdi, -1
