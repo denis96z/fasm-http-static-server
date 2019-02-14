@@ -1,6 +1,6 @@
 include './syscall.inc'
 
-STDOUT equ 0x01
+STDOUT   equ 0x01
 O_RDONLY equ 0x00
 
 macro print _ptr_, _size_
