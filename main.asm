@@ -8,6 +8,15 @@ include './syscalls/socket.inc'
 include './syscalls/process.inc'
 
 main:
+    openr _config_filename
+    cmp   rax, -1
+    jne   @f
+
+    print _open_config_fail_log, __open_config_fail_log_size
+    exit_error
+
+@@:
+    exit_ok ;TODO
 
 call_socket:
     socket
@@ -77,6 +86,15 @@ __sock_addr_size = $-_sock_addr
 include './http/response.asm'
 
 segment readable
+
+_config_filename db '/etc/config',0x00
+__config_filename_size = $-_config_filename
+
+_open_config_fail_log db 'config open() fail!',0x0A
+__open_config_fail_log_size = $-_open_config_fail_log
+
+_open_ok db 'open() ok', 0x0A
+_open_ok_size = $-_open_ok
 
 _socket_fail_log db 'socket() fail!',0x0A
 __socket_fail_log_size = $-_socket_fail_log

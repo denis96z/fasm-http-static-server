@@ -1,6 +1,7 @@
 include './syscall.inc'
 
-STDOUT equ 01h
+STDOUT equ 0x01
+O_RDONLY equ 0x00
 
 macro print _ptr_, _size_
 {
@@ -8,6 +9,15 @@ macro print _ptr_, _size_
     mov rdi, STDOUT
     mov rsi, _ptr_
     mov rdx, _size_
+    syscall
+}
+
+macro openr _filename_
+{
+    mov rax, SYS_OPEN
+    xor rdi, rdi
+    mov rsi, _filename_
+    mov rdx, O_RDONLY
     syscall
 }
 

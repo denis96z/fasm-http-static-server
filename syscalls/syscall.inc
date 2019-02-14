@@ -1,5 +1,6 @@
 SYS_READ   equ 0x00
 SYS_WRITE  equ 0x01
+SYS_OPEN   equ 0x02
 SYS_CLOSE  equ 0x03
 SYS_SOCKET equ 0x29
 SYS_ACCEPT equ 0x2B
