@@ -10,10 +10,6 @@ include './syscalls/socket.inc'
 include './syscalls/process.inc'
 
 main:
-    mov   ax, DEFAULT_SERVER_PORT
-    hton  ax
-    mov   [_srv_config.port], ax
-
     openr CONFIG_FILENAME
     cmp   rax, -1
     jne   @f
