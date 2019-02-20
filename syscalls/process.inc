@@ -7,6 +7,12 @@ macro fork
     syscall
 }
 
+macro getpid
+{
+    mov rax, SYS_GETPID
+    syscall
+}
+
 macro exit _code_
 {
     mov rax, SYS_EXIT

@@ -9,6 +9,8 @@ include './syscalls/io.inc'
 include './syscalls/socket.inc'
 include './syscalls/process.inc'
 
+include './utils/fmt.inc'
+
 main:
     openr CONFIG_FILENAME
     cmp   rax, -1
@@ -75,7 +77,15 @@ fork_loop:
     exit 0
 
 @@:
-    print _worker_start_log, WORKER_START_LOG_LEN
+    getpid
+    mov    r15, rax
+    u64tos r15, _worker_pid_buff, WORKER_PID_BUFF_SIZE
+
+    inc r9 ;first char of pid
+
+    print WORKER_START_LOG_STR, WORKER_START_LOG_LEN
+    print r9, WORKER_PID_BUFF_SIZE
+    print NEW_LINE_LOG_STR, NEW_LINE_LOG_LEN
 
 accept_loop:
     accept [_sock_fd]
@@ -108,10 +118,8 @@ _clnt_fd dq ?
 _sock_addr sockaddr_in_t SERVER_PORT
 SOCK_ADDR_SIZE = $-_sock_addr
 
-_worker_start_log db 'worker #'
-    WORKER_INDEX_STR_OFFSET = $-_worker_start_log
-                  db ' started', 0x0A
-WORKER_START_LOG_LEN = $-_worker_start_log
+_worker_pid_buff db WORKER_PID_BUFF_SIZE dup(' ')
+WORKER_PID_BUFF_SIZE = 16
 
 _clnt_fds     dq DEFAULT_NUM_WORKERS dup(?)
 _num_clnt_fds dq ?
@@ -119,6 +127,9 @@ _num_clnt_fds dq ?
 include './http/response.asm'
 
 segment readable
+
+NEW_LINE_LOG_STR db 0x0A
+NEW_LINE_LOG_LEN = $-NEW_LINE_LOG_STR
 
 CONFIG_FILENAME db '/etc/httpd.conf',0x00
 
@@ -145,6 +156,9 @@ SERVER_START_LOG_LEN = $-SERVER_START_LOG_STR
 
 FORK_FAIL_LOG_STR db 'fork() fail!',0x0A
 FORK_FAIL_LOG_LEN = $-FORK_FAIL_LOG_STR
+
+WORKER_START_LOG_STR db 'worker started, pid:'
+WORKER_START_LOG_LEN = $-WORKER_START_LOG_STR
 
 ACCEPT_FAIL_LOG_STR db 'accept() fail!',0x0A
 ACCEPT_FAIL_LOG_LEN = $-ACCEPT_FAIL_LOG_STR
