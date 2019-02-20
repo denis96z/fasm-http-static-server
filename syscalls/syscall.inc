@@ -9,3 +9,4 @@ SYS_BIND   equ 0x31
 SYS_LISTEN equ 0x32
 SYS_FORK   equ 0x39
 SYS_EXIT   equ 0x3C
+SYS_FCNTL  equ 0x48

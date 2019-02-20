@@ -7,6 +7,7 @@ include './config/config.inc'
 
 include './syscalls/io.inc'
 include './syscalls/socket.inc'
+include './syscalls/epoll.inc'
 include './syscalls/process.inc'
 
 include './utils/fmt.inc'
@@ -40,9 +41,16 @@ main:
 @@:
     mov   [_sock_fd], rax
 
+    setnb [_sock_fd]
+    cmp   rax, -1
+    jne   @f
+
+    panic SET_NONBLOCKING_FAIL_LOG_STR, SET_NONBLOCKING_FAIL_LOG_LEN
+
+@@:
     bind [_sock_fd], _sock_addr, SOCK_ADDR_SIZE
     test rax, rax
-    je   @f
+    jz   @f
 
     panic BIND_FAIL_LOG_STR, BIND_FAIL_LOG_LEN
 
@@ -121,8 +129,10 @@ SOCK_ADDR_SIZE = $-_sock_addr
 _worker_pid_buff db WORKER_PID_BUFF_SIZE dup(' ')
 WORKER_PID_BUFF_SIZE = 16
 
-_clnt_fds     dq DEFAULT_NUM_WORKERS dup(?)
-_num_clnt_fds dq ?
+_sock_ev epoll_event_t
+
+;_clnt_events     epoll_event_t DEFAULT_NUM_WORKERS dup(<>) ;TODO
+;_num_clnt_events dq            ?                           ;TODO
 
 include './http/response.asm'
 
@@ -144,6 +154,9 @@ CLOSE_CONFIG_FAIL_LOG_LEN = $-CLOSE_CONFIG_FAIL_LOG_STR
 
 SOCKET_FAIL_LOG_STR db 'socket() fail!',0x0A
 SOCKET_FAIL_LOG_LEN = $-SOCKET_FAIL_LOG_STR
+
+SET_NONBLOCKING_FAIL_LOG_STR db 'fcntl() set non-blocking fail!',0x0A
+SET_NONBLOCKING_FAIL_LOG_LEN = $-SET_NONBLOCKING_FAIL_LOG_STR
 
 BIND_FAIL_LOG_STR db 'bind() fail!',0x0A
 BIND_FAIL_LOG_LEN = $-BIND_FAIL_LOG_STR
