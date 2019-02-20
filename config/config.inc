@@ -1,12 +1,12 @@
 DEFAULT_SERVER_PORT = 80
-DEFAULT_NUM_WORKERS = 1024
+DEFAULT_NUM_WORKERS = 2
+DEFAULT_MAX_CONNECTIONS = 1024
 DOCUMENT_ROOT_BUFFER_SIZE = 255
 
 struc srv_config_t
 {
     .port            dw 0x5000 ;80
-    .num_workers     db 2
-    .max_connections dw DEFAULT_NUM_WORKERS
+    .num_workers     dq DEFAULT_NUM_WORKERS
     .document_root   db DOCUMENT_ROOT_BUFFER_SIZE+1 dup(0)
 }
 

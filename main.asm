@@ -54,7 +54,7 @@ main:
 @@:
     print SERVER_START_LOG_STR, SERVER_START_LOG_LEN
 
-    mov r9, qword [_srv_config.num_workers]
+    mov r9, [_srv_config.num_workers]
 
 fork_loop:
     fork
@@ -75,8 +75,7 @@ fork_loop:
     exit 0
 
 @@:
-    mov _worker_start_log 
-    print WORKER_START_LOG_STR, WORKER_START_LOG_LEN
+    print _worker_start_log, WORKER_START_LOG_LEN
 
 accept_loop:
     accept [_sock_fd]
@@ -112,7 +111,7 @@ SOCK_ADDR_SIZE = $-_sock_addr
 _worker_start_log db 'worker #'
     WORKER_INDEX_STR_OFFSET = $-_worker_start_log
                   db ' started', 0x0A
-WORKER_START_LOG_STR = $-WORKER_START_LOG_LEN
+WORKER_START_LOG_LEN = $-_worker_start_log
 
 _clnt_fds     dq DEFAULT_NUM_WORKERS dup(?)
 _num_clnt_fds dq ?
