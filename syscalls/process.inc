@@ -1,3 +1,4 @@
+include './io.inc'
 include './syscall.inc'
 
 macro fork
@@ -6,16 +7,15 @@ macro fork
     syscall
 }
 
-macro exit_ok
+macro exit _code_
 {
     mov rax, SYS_EXIT
     xor rdi, rdi
     syscall
 }
 
-macro exit_error
+macro panic _message_, _message_len_
 {
-    mov rax, SYS_EXIT
-    mov rdi, -1
-    syscall
+    print _message_, _message_len_
+    exit  -1
 }

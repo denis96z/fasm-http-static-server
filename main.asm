@@ -14,83 +14,88 @@ main:
     cmp   rax, -1
     jne   @f
 
-    print OPEN_CONFIG_FAIL_LOG_STR, OPEN_CONFIG_FAIL_LOG_LEN
-    exit_error
+    panic OPEN_CONFIG_FAIL_LOG_STR, OPEN_CONFIG_FAIL_LOG_LEN
 
 @@:
-    mov  [_config_fd], rax
+    mov  r10, rax
 
-    read [_config_fd], _config_buffer, CONFIG_BUFFER_SIZE
+    read r10, _config_buffer, CONFIG_BUFFER_SIZE
     cmp  rax, -1
     jne  @f
 
-    print READ_CONFIG_FAIL_LOG_STR, READ_CONFIG_FAIL_LOG_LEN
-    exit_error
+    panic READ_CONFIG_FAIL_LOG_STR, READ_CONFIG_FAIL_LOG_LEN
 
 @@:
     mov   [_config_data_size], rax
-    exit_ok ;TODO
+    close r10
 
-call_socket:
     socket
     cmp rax, 0
-    jg  on_socket_success
+    jg  @f
 
-on_socket_fail:
-    print _socket_fail_log, __socket_fail_log_size
-    exit_error
+    panic SOCKET_FAIL_LOG_STR, SOCKET_FAIL_LOG_LEN
 
-on_socket_success:
+@@:
     mov   [_sock_fd], rax
-    print _socket_success_log, __socket_success_log_size
 
-call_bind:
-    bind [_sock_fd], _sock_addr, __sock_addr_size
+    bind [_sock_fd], _sock_addr, SOCK_ADDR_SIZE
     test rax, rax
-    je   on_bind_success
+    je   @f
 
-on_bind_fail:
-    print _bind_fail_log, __bind_fail_log_size
-    exit_error
+    panic BIND_FAIL_LOG_STR, BIND_FAIL_LOG_LEN
 
-on_bind_success:
-    print _bind_success_log, __bind_success_log_size
-
-call_listen:
+@@:
     listen [_sock_fd]
     test   rax, rax
-    je     on_listen_success
+    je     @f
 
-on_listen_fail:
-    print _listen_fail_log, __listen_fail_log_size
-    exit_error
+    panic LISTEN_FAIL_LOG_STR, LISTEN_FAIL_LOG_LEN
 
-on_listen_success:
-    print _listen_success_log, __listen_success_log_size
+@@:
+    print SERVER_START_LOG_STR, SERVER_START_LOG_LEN
 
-call_accept:
+    mov r9, qword [_srv_config.num_workers]
+
+fork_loop:
+    fork
+    mov r10, rax
+    cmp r10, -1
+    jne @f
+
+    panic FORK_FAIL_LOG_STR, FORK_FAIL_LOG_LEN
+
+@@:
+    test r10, r10
+    jne  @f
+
+    dec  r9
+    test r9, r9
+    jne  fork_loop
+
+    exit 0
+
+@@:
+    mov _worker_start_log 
+    print WORKER_START_LOG_STR, WORKER_START_LOG_LEN
+
+accept_loop:
     accept [_sock_fd]
     cmp    rax, -1
     mov    [_clnt_fd], rax
-    jne    on_accept_success
+    jne    @f
 
-on_accept_fail:
-    print _accept_fail_log, __accept_fail_log_size
-    jmp   call_accept
+    print ACCEPT_FAIL_LOG_STR, ACCEPT_FAIL_LOG_LEN
+    jmp   accept_loop
 
-on_accept_success:
+@@:
     write [_clnt_fd], _http_html_headers, __http_html_headers_size
     close [_clnt_fd]
-    jmp   call_accept
-
-call_exit:
-    exit_ok
+    jmp   accept_loop
 
 segment readable writeable
 
 CONFIG_BUFFER_SIZE = 512
 
-_config_fd        dq ?
 _config_buffer    db CONFIG_BUFFER_SIZE dup(?)
 _config_data_size dq ?
 
@@ -102,7 +107,15 @@ _sock_fd dq ?
 _clnt_fd dq ?
 
 _sock_addr sockaddr_in_t SERVER_PORT
-__sock_addr_size = $-_sock_addr
+SOCK_ADDR_SIZE = $-_sock_addr
+
+_worker_start_log db 'worker #'
+    WORKER_INDEX_STR_OFFSET = $-_worker_start_log
+                  db ' started', 0x0A
+WORKER_START_LOG_STR = $-WORKER_START_LOG_LEN
+
+_clnt_fds     dq DEFAULT_NUM_WORKERS dup(?)
+_num_clnt_fds dq ?
 
 include './http/response.asm'
 
@@ -116,26 +129,23 @@ OPEN_CONFIG_FAIL_LOG_LEN = $-OPEN_CONFIG_FAIL_LOG_STR
 READ_CONFIG_FAIL_LOG_STR db 'config read() fail!',0x0A
 READ_CONFIG_FAIL_LOG_LEN = $-READ_CONFIG_FAIL_LOG_STR
 
-_socket_fail_log db 'socket() fail!',0x0A
-__socket_fail_log_size = $-_socket_fail_log
+CLOSE_CONFIG_FAIL_LOG_STR db 'config close() fail!',0x0A
+CLOSE_CONFIG_FAIL_LOG_LEN = $-CLOSE_CONFIG_FAIL_LOG_STR
 
-_socket_success_log db 'socket() success!',0x0A
-__socket_success_log_size = $-_socket_success_log
+SOCKET_FAIL_LOG_STR db 'socket() fail!',0x0A
+SOCKET_FAIL_LOG_LEN = $-SOCKET_FAIL_LOG_STR
 
-_bind_fail_log db 'bind() fail!',0x0A
-__bind_fail_log_size = $-_bind_fail_log
+BIND_FAIL_LOG_STR db 'bind() fail!',0x0A
+BIND_FAIL_LOG_LEN = $-BIND_FAIL_LOG_STR
 
-_bind_success_log db 'bind() success!',0x0A
-__bind_success_log_size = $-_bind_success_log
+LISTEN_FAIL_LOG_STR db 'listen() fail!',0x0A
+LISTEN_FAIL_LOG_LEN = $-LISTEN_FAIL_LOG_STR
 
-_listen_fail_log db 'listen() fail!',0x0A
-__listen_fail_log_size = $-_listen_fail_log
+SERVER_START_LOG_STR db 'listening on 0.0.0.0:80', 0x0A ;TODO print port
+SERVER_START_LOG_LEN = $-SERVER_START_LOG_STR
 
-_listen_success_log db 'listen() success!',0x0A
-__listen_success_log_size = $-_listen_success_log
+FORK_FAIL_LOG_STR db 'fork() fail!',0x0A
+FORK_FAIL_LOG_LEN = $-FORK_FAIL_LOG_STR
 
-_accept_fail_log db 'accept() fail!',0x0A
-__accept_fail_log_size = $-_accept_fail_log
-
-_accept_success_log db 'accept() success!',0x0A
-__accept_success_log_size = $-_accept_success_log
+ACCEPT_FAIL_LOG_STR db 'accept() fail!',0x0A
+ACCEPT_FAIL_LOG_LEN = $-ACCEPT_FAIL_LOG_STR
