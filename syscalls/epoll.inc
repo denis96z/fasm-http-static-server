@@ -31,3 +31,30 @@ macro setnb _fd_
     mov rdx, r8
     syscall
 }
+
+macro epollcreate _size_
+{
+    mov rax, SYS_EPOLL_CREATE
+    mov rdi, _size_
+    syscall
+}
+
+macro epollctl _epfd_, _op_, _fd_, _evt_ptr_
+{
+    mov rax, SYS_EPOLL_CTL
+    mov rdi, _epfd_
+    mov rsi, _op_
+    mov rdx, _fd_
+    mov rcx, _evt_ptr_
+    syscall
+}
+
+macro epollwait _epfd_, _evt_buff_, _max_evt_, _timeout_
+{
+    mov rax, SYS_EPOLL_WAIT
+    mov rdi, _epfd_
+    mov rsi, _evt_buff_
+    mov rdx, _max_evt_
+    mov rcx, _timeout_
+    syscall
+}
