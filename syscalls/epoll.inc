@@ -8,6 +8,10 @@ O_NONBLOCK equ 0x0FA0
 EPOLLIN equ 0x00000001
 EPOLLET equ 0x80000000
 
+EPOLL_CTL_ADD equ 0x01
+EPOLL_CTL_DEL equ 0x02
+EPOLL_CTL_MOD equ 0x03
+
 struc epoll_event_t
 {
     .events dd ?
@@ -45,7 +49,7 @@ macro epollctl _epfd_, _op_, _fd_, _evt_ptr_
     mov rdi, _epfd_
     mov rsi, _op_
     mov rdx, _fd_
-    mov rcx, _evt_ptr_
+    mov r10, _evt_ptr_
     syscall
 }
 
@@ -55,6 +59,6 @@ macro epollwait _epfd_, _evt_buff_, _max_evt_, _timeout_
     mov rdi, _epfd_
     mov rsi, _evt_buff_
     mov rdx, _max_evt_
-    mov rcx, _timeout_
+    xor r10, _timeout_
     syscall
 }
