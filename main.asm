@@ -41,11 +41,11 @@ main:
 @@:
     mov   [_sock_fd], rax
 
-    setnb [_sock_fd]
-    cmp   rax, -1
-    jne   @f
+    ;setnb [_sock_fd]
+    ;cmp   rax, -1
+    ;jne   @f
 
-    panic SET_NONBLOCKING_FAIL_LOG_STR, SET_NONBLOCKING_FAIL_LOG_LEN
+    ;panic SET_NONBLOCKING_FAIL_LOG_STR, SET_NONBLOCKING_FAIL_LOG_LEN
 
 @@:
     bind [_sock_fd], _sock_addr, SOCK_ADDR_SIZE
@@ -89,10 +89,12 @@ fork_loop:
     mov    r15, rax
     u64tos r15, _worker_pid_buff, WORKER_PID_BUFF_SIZE
 
-    inc r9 ;first char of pid
+    mov r10, _worker_pid_buff + WORKER_PID_BUFF_SIZE
+    sub r10, r9
+    inc r9
 
     print WORKER_START_LOG_STR, WORKER_START_LOG_LEN
-    print r9, WORKER_PID_BUFF_SIZE
+    print r9, r10
     print NEW_LINE_LOG_STR, NEW_LINE_LOG_LEN
 
 accept_loop:
